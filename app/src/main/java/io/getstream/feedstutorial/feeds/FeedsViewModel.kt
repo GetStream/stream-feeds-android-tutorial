@@ -10,6 +10,7 @@ import io.getstream.feeds.android.client.api.model.ActivityData
 import io.getstream.feeds.android.client.api.model.FeedAddActivityRequest
 import io.getstream.feeds.android.client.api.model.FeedId
 import io.getstream.feeds.android.client.api.state.Feed
+import io.getstream.feeds.android.network.models.AddReactionRequest
 import io.getstream.feedstutorial.ClientProvider
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -98,6 +99,16 @@ class FeedsViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun onLikeClick(activity: ActivityData) {
-        // TODO: Implement as part of the tutorial
+        val state = state.value ?: return
+        val hasOwnReaction = activity.ownReactions.any { it.type == "like" }
+
+        viewModelScope.launch {
+            if (hasOwnReaction) {
+                state.timelineFeed.deleteActivityReaction(activity.id, "like")
+            } else {
+                val request = AddReactionRequest("like", createNotificationActivity = true)
+                state.timelineFeed.addActivityReaction(activity.id, request)
+            }
+        }
     }
 }
