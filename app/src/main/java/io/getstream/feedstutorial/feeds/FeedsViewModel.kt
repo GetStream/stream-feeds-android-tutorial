@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import io.getstream.feeds.android.client.api.FeedsClient
 import io.getstream.feeds.android.client.api.model.ActivityData
 import io.getstream.feeds.android.client.api.model.FeedAddActivityRequest
+import io.getstream.feeds.android.client.api.model.FeedId
 import io.getstream.feeds.android.client.api.state.Feed
 import io.getstream.feedstutorial.ClientProvider
 import kotlinx.coroutines.flow.SharingStarted
@@ -77,7 +78,23 @@ class FeedsViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun onFollowClick(activity: ActivityData) {
-        // TODO: Implement as part of the tutorial
+        val state = state.value ?: return
+
+        viewModelScope.launch {
+            val targetFeedId = FeedId("user", activity.user.id)
+            val isFollowing = activity.currentFeed?.ownFollows.isNullOrEmpty().not()
+
+            val result = if (isFollowing) {
+                state.timelineFeed.unfollow(targetFeedId)
+            } else {
+                state.timelineFeed.follow(targetFeedId)
+            }
+            // Ensure the feeds are up to date after follow/unfollow
+            result.onSuccess {
+                launch { state.timelineFeed.getOrCreate() }
+                launch { state.exploreFeed.getOrCreate() }
+            }
+        }
     }
 
     fun onLikeClick(activity: ActivityData) {

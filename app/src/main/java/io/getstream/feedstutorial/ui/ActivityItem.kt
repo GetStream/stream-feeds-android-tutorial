@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,7 +41,7 @@ fun ActivityItem(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            ActivityHeader(activity)
+            ActivityHeader(activity, currentUserId, onFollowClick)
 
             Text(
                 text = activity.text.orEmpty(),
@@ -55,6 +56,8 @@ fun ActivityItem(
 @Composable
 private fun ActivityHeader(
     activity: ActivityData,
+    currentUserId: String,
+    onFollowClick: (ActivityData) -> Unit,
 ) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Avatar(activity.user)
@@ -67,6 +70,16 @@ private fun ActivityHeader(
                 .weight(1f)
                 .padding(horizontal = 16.dp),
         )
+
+        if (activity.user.id != currentUserId) {
+            TextButton(onClick = { onFollowClick(activity) }) {
+                if (activity.currentFeed?.ownFollows.isNullOrEmpty()) {
+                    Text("Follow")
+                } else {
+                    Text("Unfollow")
+                }
+            }
+        }
     }
 }
 
