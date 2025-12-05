@@ -17,6 +17,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import io.getstream.feeds.android.client.api.model.ActivityData
+import io.getstream.feedstutorial.ui.ActivityComposer
 import io.getstream.feedstutorial.ui.ActivityItem
 import io.getstream.feedstutorial.ui.EmptyContent
 import io.getstream.feedstutorial.ui.LoadingScreen
@@ -55,6 +56,8 @@ fun HomeContent(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        item { ActivityComposer(onPost = onPost) }
+
         if (timelineActivities.isEmpty()) {
             item { EmptyContent("Write something to start your timeline ✨") }
         } else {

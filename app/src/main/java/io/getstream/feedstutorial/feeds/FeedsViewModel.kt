@@ -7,6 +7,7 @@ import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
 import io.getstream.feeds.android.client.api.FeedsClient
 import io.getstream.feeds.android.client.api.model.ActivityData
+import io.getstream.feeds.android.client.api.model.FeedAddActivityRequest
 import io.getstream.feeds.android.client.api.state.Feed
 import io.getstream.feedstutorial.ClientProvider
 import kotlinx.coroutines.flow.SharingStarted
@@ -60,7 +61,16 @@ class FeedsViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun onPost(text: String, imageUri: Uri?) {
-        // TODO: Implement as part of the tutorial
+        val state = state.value ?: return
+
+        viewModelScope.launch {
+            val request = FeedAddActivityRequest(
+                type = "post",
+                text = text.trim(),
+                feeds = listOf(state.userFeed.fid.rawValue),
+            )
+            state.userFeed.addActivity(request = request)
+        }
     }
 
     fun onFollowClick(activity: ActivityData) {
