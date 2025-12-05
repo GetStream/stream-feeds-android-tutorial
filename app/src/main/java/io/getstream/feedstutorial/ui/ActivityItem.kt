@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Card
@@ -62,6 +63,15 @@ fun ActivityItem(
                     .fillMaxWidth()
                     .padding(top = 8.dp),
             ) {
+                ActionButton(
+                    icon = Icons.Default.ChatBubbleOutline,
+                    count = activity.commentCount,
+                    contentDescription = "Comments",
+                    onClick = {
+                        navController.navigate("comments/${feedId.rawValue}/${activity.id}")
+                    },
+                )
+
                 val reactionCount = activity.reactionGroups["like"]?.count ?: 0
                 val hasOwnReaction = activity.ownReactions.any { it.type == "like" }
                 ActionButton(
