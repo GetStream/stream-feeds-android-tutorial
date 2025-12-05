@@ -26,6 +26,7 @@ class FeedsViewModel(application: Application) : AndroidViewModel(application) {
         val client: FeedsClient,
         val userFeed: Feed,
         val timelineFeed: Feed,
+        val exploreFeed: Feed,
     )
 
     private suspend fun createState(): State {
@@ -34,6 +35,7 @@ class FeedsViewModel(application: Application) : AndroidViewModel(application) {
             client = client,
             userFeed = client.feed("user", client.user.id),
             timelineFeed = client.feed("timeline", client.user.id),
+            exploreFeed = client.feed("foryou", client.user.id),
         )
         loadFeeds(state)
         return state
@@ -42,6 +44,7 @@ class FeedsViewModel(application: Application) : AndroidViewModel(application) {
     private suspend fun loadFeeds(state: State) {
         state.userFeed.getOrCreate()
         state.timelineFeed.getOrCreate()
+        state.exploreFeed.getOrCreate()
 
         viewModelScope.launch { followSelfIfNeeded(state) }
     }
