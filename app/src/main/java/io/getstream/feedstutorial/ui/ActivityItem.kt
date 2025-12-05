@@ -1,9 +1,29 @@
 package io.getstream.feedstutorial.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil3.compose.AsyncImage
 import io.getstream.feeds.android.client.api.model.ActivityData
 import io.getstream.feeds.android.client.api.model.FeedId
+import io.getstream.feeds.android.client.api.model.UserData
 
 @Composable
 fun ActivityItem(
@@ -14,5 +34,58 @@ fun ActivityItem(
     onFollowClick: (ActivityData) -> Unit,
     onLikeClick: (ActivityData) -> Unit,
 ) {
-    // TODO: Implement as part of the tutorial
+    Card {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            ActivityHeader(activity)
+
+            Text(
+                text = activity.text.orEmpty(),
+                fontSize = 14.sp,
+                lineHeight = 20.sp,
+                modifier = Modifier.padding(start = 56.dp, bottom = 8.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun ActivityHeader(
+    activity: ActivityData,
+) {
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Avatar(activity.user)
+
+        Text(
+            text = activity.user.name ?: "Unknown",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 16.dp),
+        )
+    }
+}
+
+@Composable
+private fun Avatar(user: UserData) {
+    Box(contentAlignment = Alignment.Center) {
+        AsyncImage(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.secondary),
+            model = user.image,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+        )
+        Text(
+            text = user.name?.firstOrNull()?.uppercase() ?: "?",
+            color = MaterialTheme.colorScheme.onSecondary,
+            fontWeight = FontWeight.Bold,
+        )
+    }
 }
