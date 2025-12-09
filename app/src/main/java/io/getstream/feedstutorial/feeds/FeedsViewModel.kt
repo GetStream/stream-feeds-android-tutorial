@@ -1,23 +1,30 @@
 package io.getstream.feedstutorial.feeds
 
 import android.app.Application
+import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
 import io.getstream.feeds.android.client.api.FeedsClient
+import io.getstream.feeds.android.client.api.file.FeedUploadPayload
+import io.getstream.feeds.android.client.api.file.FileType
 import io.getstream.feeds.android.client.api.model.ActivityData
 import io.getstream.feeds.android.client.api.model.FeedAddActivityRequest
 import io.getstream.feeds.android.client.api.model.FeedId
 import io.getstream.feeds.android.client.api.state.Feed
 import io.getstream.feeds.android.network.models.AddReactionRequest
 import io.getstream.feedstutorial.ClientProvider
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
 
 class FeedsViewModel(application: Application) : AndroidViewModel(application) {
     val state: StateFlow<State?> =
@@ -69,13 +76,53 @@ class FeedsViewModel(application: Application) : AndroidViewModel(application) {
         val state = state.value ?: return
 
         viewModelScope.launch {
+            val imageFile: File? = imageUri?.let { application.copyToCache(it) }?.getOrElse {
+                // Failed to copy the file to cache
+                return@launch
+            }
+            val attachment = imageFile?.let { listOf(FeedUploadPayload(it, FileType.Image)) }
+
             val request = FeedAddActivityRequest(
                 type = "post",
                 text = text.trim(),
                 feeds = listOf(state.userFeed.fid.rawValue),
+                attachmentUploads = attachment,
             )
             state.userFeed.addActivity(request = request)
+
+            imageFile?.let { deleteFile(it) }
         }
+    }
+
+    private suspend fun Context.copyToCache(uri: Uri) = withContext(Dispatchers.IO) {
+        runCatching {
+            val outputFile = File(cacheDir, "attachment_${System.currentTimeMillis()}.tmp")
+
+            contentResolver.openInputStream(uri).use { inputStream ->
+                checkNotNull(inputStream) { "Error opening input stream for URI: $uri" }
+
+                FileOutputStream(outputFile).use(inputStream::copyTo)
+            }
+            outputFile
+        }
+    }
+
+    fun onLikeClick(activity: ActivityData) {
+        val state = state.value ?: return
+        val hasOwnReaction = activity.ownReactions.any { it.type == "like" }
+
+        viewModelScope.launch {
+            if (hasOwnReaction) {
+                state.timelineFeed.deleteActivityReaction(activity.id, "like")
+            } else {
+                val request = AddReactionRequest("like", createNotificationActivity = true)
+                state.timelineFeed.addActivityReaction(activity.id, request)
+            }
+        }
+    }
+
+    private suspend fun deleteFile(file: File) = runCatching {
+        withContext(Dispatchers.IO) { file.delete() }
     }
 
     fun onFollowClick(activity: ActivityData) {
@@ -94,20 +141,6 @@ class FeedsViewModel(application: Application) : AndroidViewModel(application) {
             result.onSuccess {
                 launch { state.timelineFeed.getOrCreate() }
                 launch { state.exploreFeed.getOrCreate() }
-            }
-        }
-    }
-
-    fun onLikeClick(activity: ActivityData) {
-        val state = state.value ?: return
-        val hasOwnReaction = activity.ownReactions.any { it.type == "like" }
-
-        viewModelScope.launch {
-            if (hasOwnReaction) {
-                state.timelineFeed.deleteActivityReaction(activity.id, "like")
-            } else {
-                val request = AddReactionRequest("like", createNotificationActivity = true)
-                state.timelineFeed.addActivityReaction(activity.id, request)
             }
         }
     }

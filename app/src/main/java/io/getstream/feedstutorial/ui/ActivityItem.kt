@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material.icons.filled.Favorite
@@ -33,6 +35,7 @@ import coil3.compose.AsyncImage
 import io.getstream.feeds.android.client.api.model.ActivityData
 import io.getstream.feeds.android.client.api.model.FeedId
 import io.getstream.feeds.android.client.api.model.UserData
+import io.getstream.feeds.android.network.models.Attachment
 
 @Composable
 fun ActivityItem(
@@ -57,6 +60,10 @@ fun ActivityItem(
                 lineHeight = 20.sp,
                 modifier = Modifier.padding(start = 56.dp, bottom = 8.dp),
             )
+
+            activity.attachments.firstOrNull()?.let { attachment ->
+                ImageAttachment(attachment)
+            }
 
             Row(
                 modifier = Modifier
@@ -86,10 +93,25 @@ fun ActivityItem(
 }
 
 @Composable
+private fun ImageAttachment(attachment: Attachment) {
+    AsyncImage(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(240.dp)
+                .padding(top = 8.dp)
+                .clip(RoundedCornerShape(12.dp)),
+        model = attachment.imageUrl,
+        contentDescription = "Activity image",
+        contentScale = ContentScale.Crop,
+    )
+}
+
+@Composable
 private fun ActivityHeader(
     activity: ActivityData,
     currentUserId: String,
-    onFollowClick: (ActivityData) -> Unit,
+    onFollowClick: (ActivityData) -> Unit
 ) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Avatar(activity.user)
